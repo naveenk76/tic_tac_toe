@@ -2,9 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import random
 
-# -------------------------------
 # COLORS AND SETTINGS
-# -------------------------------
 
 WHITE = "#FFFFFF"
 BACKGROUND = "#F2F6FC"
@@ -44,10 +42,7 @@ WINNING_COMBINATIONS = [
 ]
 
 
-# -------------------------------
 # GAME LOGIC
-# -------------------------------
-
 def check_winner(player):
     for combo in WINNING_COMBINATIONS:
         if all(board[i] == player for i in combo):
@@ -73,10 +68,7 @@ def find_winning_move(player):
     return None
 
 
-# -------------------------------
 # AI
-# -------------------------------
-
 def easy_ai():
     empty_positions = [
         i for i in range(BOARD_SIZE)
@@ -179,10 +171,7 @@ def get_ai_move():
     return hard_ai()
 
 
-# -------------------------------
 # GUI UPDATES
-# -------------------------------
-
 def update_scoreboard():
     player_score.config(
         text=f"{'YOU' if game_mode == 'AI' else 'PLAYER 1'}\n"
@@ -261,10 +250,7 @@ def show_restart_option():
     )
 
 
-# -------------------------------
 # GAME FLOW
-# -------------------------------
-
 def finish_game(winner):
     global game_over
 
@@ -469,11 +455,7 @@ def reset_scores():
         update_scoreboard()
         restart_game()
 
-
-# -------------------------------
 # MAIN WINDOW
-# -------------------------------
-
 root = tk.Tk()
 root.title("Tic Tac Toe")
 root.state("zoomed")
