@@ -1,4 +1,3 @@
-
 import tkinter as tk
 from tkinter import messagebox
 import random
@@ -32,10 +31,6 @@ scores = {
     "player2": 0,
     "draw": 0
 }
-
-# -------------------------------
-# WINNING COMBINATIONS
-# -------------------------------
 
 WINNING_COMBINATIONS = [
     (0, 1, 2),
@@ -88,23 +83,24 @@ def easy_ai():
         if board[i] == " "
     ]
 
-    return random.choice(empty_positions)
+    if empty_positions:
+        return random.choice(empty_positions)
+
+    return None
 
 
 def medium_ai():
-    # Win when possible
+    # Win if possible
     move = find_winning_move("O")
-
     if move is not None:
         return move
 
-    # Block the human player's win
+    # Block X from winning
     move = find_winning_move("X")
-
     if move is not None:
         return move
 
-    # Prefer the center
+    # Prefer center
     if board[4] == " ":
         return 4
 
@@ -138,6 +134,7 @@ def minimax(is_ai_turn, depth=0):
                 board[i] = "O"
                 score = minimax(False, depth + 1)
                 board[i] = " "
+
                 best_score = max(best_score, score)
 
         return best_score
@@ -149,6 +146,7 @@ def minimax(is_ai_turn, depth=0):
             board[i] = "X"
             score = minimax(True, depth + 1)
             board[i] = " "
+
             best_score = min(best_score, score)
 
     return best_score
@@ -187,7 +185,8 @@ def get_ai_move():
 
 def update_scoreboard():
     player_score.config(
-        text=f"YOU\n{scores['player']}"
+        text=f"{'YOU' if game_mode == 'AI' else 'PLAYER 1'}\n"
+             f"{scores['player']}"
     )
 
     if game_mode == "AI":
@@ -205,10 +204,7 @@ def update_scoreboard():
 
 
 def set_status(message, color=TEXT):
-    status_label.config(
-        text=message,
-        fg=color
-    )
+    status_label.config(text=message, fg=color)
 
 
 def update_board():
@@ -219,14 +215,12 @@ def update_board():
                 fg=BLUE,
                 disabledforeground=BLUE
             )
-
         elif board[i] == "O":
             buttons[i].config(
                 text="O",
                 fg=ORANGE,
                 disabledforeground=ORANGE
             )
-
         else:
             buttons[i].config(
                 text="",
@@ -247,13 +241,24 @@ def enable_board():
         if board[i] == " ":
             buttons[i].config(
                 state="normal",
-                bg=WHITE
+                bg=WHITE,
+                activebackground=LIGHT_BLUE
             )
 
 
 def disable_board():
     for button in buttons:
         button.config(state="disabled")
+
+
+def show_restart_option():
+    # Keep the button visible and change its label after the round.
+    restart_button.config(
+        text="↻  Play Again",
+        state="normal",
+        bg=GREEN,
+        activebackground="#15803D"
+    )
 
 
 # -------------------------------
@@ -267,11 +272,11 @@ def finish_game(winner):
     disable_board()
 
     if winner == "X":
+        scores["player"] += 1
+
         if game_mode == "AI":
-            scores["player"] += 1
             message = "You win! Great job!"
         else:
-            scores["player"] += 1
             message = "Player 1 wins!"
 
         color = GREEN
@@ -298,6 +303,7 @@ def finish_game(winner):
 
     update_scoreboard()
     set_status(message, color)
+    show_restart_option()
 
 
 def check_game_state(player):
@@ -325,12 +331,10 @@ def player_move(position):
     if check_game_state("X"):
         return
 
-    if game_mode == "TWO":
-        set_status("Player 2's turn — choose a square", ORANGE)
-    else:
-        set_status("AI is thinking...", MUTED)
-        disable_board()
-        root.after(350, ai_turn)
+    set_status("AI is thinking...", MUTED)
+    disable_board()
+
+    root.after(350, ai_turn)
 
 
 def ai_turn():
@@ -354,19 +358,13 @@ def ai_turn():
 
 
 def two_player_turn(position):
-    global game_over
-
     if game_over or board[position] != " ":
         return
 
-    # The board tells us whose turn it is.
     x_count = board.count("X")
     o_count = board.count("O")
 
-    if x_count == o_count:
-        current_player = "X"
-    else:
-        current_player = "O"
+    current_player = "X" if x_count == o_count else "O"
 
     board[position] = current_player
     buttons[position].config(state="disabled")
@@ -394,6 +392,7 @@ def on_square_click(position):
 def restart_game():
     global board, game_over
 
+    # Start a fresh round without resetting the scores.
     board = [" " for _ in range(BOARD_SIZE)]
     game_over = False
 
@@ -402,9 +401,17 @@ def restart_game():
             text="",
             state="normal",
             bg=WHITE,
-            activebackground=LIGHT_BLUE,
-            fg=TEXT
+            fg=TEXT,
+            disabledforeground=TEXT,
+            activebackground=LIGHT_BLUE
         )
+
+    restart_button.config(
+        text="↻  Restart Game",
+        state="normal",
+        bg=BLUE,
+        activebackground=DARK_BLUE
+    )
 
     if game_mode == "AI":
         set_status("Your turn — choose a square", BLUE)
@@ -419,27 +426,28 @@ def change_mode(mode):
 
     if mode == "AI":
         ai_mode_button.config(
-            bg=BLUE, fg=WHITE,
+            bg=BLUE,
+            fg=WHITE,
             relief="flat"
         )
         two_mode_button.config(
-            bg=WHITE, fg=BLUE,
+            bg=WHITE,
+            fg=BLUE,
             relief="solid"
         )
         difficulty_menu.config(state="normal")
-        set_status("Your turn — choose a square", BLUE)
-
     else:
         two_mode_button.config(
-            bg=BLUE, fg=WHITE,
+            bg=BLUE,
+            fg=WHITE,
             relief="flat"
         )
         ai_mode_button.config(
-            bg=WHITE, fg=BLUE,
+            bg=WHITE,
+            fg=BLUE,
             relief="solid"
         )
         difficulty_menu.config(state="disabled")
-        set_status("Player 1's turn — choose a square", BLUE)
 
     update_scoreboard()
     restart_game()
@@ -468,8 +476,10 @@ def reset_scores():
 
 root = tk.Tk()
 root.title("Tic Tac Toe")
-root.geometry("470x700")
-root.resizable(False, False)
+root.state("zoomed")
+root.geometry("470x850")
+root.minsize(470, 700)
+root.resizable(True, True)
 root.configure(bg=BACKGROUND)
 
 # Header
@@ -622,11 +632,8 @@ status_label.pack(pady=(8, 12))
 
 
 # Game board
-board_frame = tk.Frame(
-    root,
-    bg=BACKGROUND
-)
-board_frame.pack(padx=25, pady=5)
+board_frame = tk.Frame(root, bg=BACKGROUND)
+board_frame.pack(padx=25, pady=2)
 
 for i in range(BOARD_SIZE):
     button = tk.Button(
@@ -658,7 +665,7 @@ for i in range(BOARD_SIZE):
 
 # Controls
 control_frame = tk.Frame(root, bg=BACKGROUND)
-control_frame.pack(fill="x", padx=30, pady=22)
+control_frame.pack(fill="x", padx=30, pady=8)
 
 restart_button = tk.Button(
     control_frame,
